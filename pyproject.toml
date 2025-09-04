@@ -12,6 +12,7 @@ unicorn = "^2.1.3"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.43"}
 alembic = "^1.16.5"
 aiosqlite = "^0.21.0"
+pydantic-settings = "^2.10.1"
 
 
 [build-system]
