@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "car-qr-service"
+version = "0.1.0"
+description = "Service for car owners to expose their contact data thought qr code."
+authors = ["Oleksander  Shevchenko <oleksandr.shevchenko@damen.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.116.1"
+unicorn = "^2.1.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
