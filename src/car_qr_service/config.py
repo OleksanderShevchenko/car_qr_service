@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     з .env файлу та змінних оточення.
     """
     # URL для підключення до бази даних
-    DB_URL: str = "sqlite+aiosqlite:///./test.db"
+    DB_URL: str = "sqlite+aiosqlite:///./car_qr.db"
 
     model_config = SettingsConfigDict(env_file=".env")
 
