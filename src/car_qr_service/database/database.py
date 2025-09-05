@@ -1,4 +1,4 @@
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 
 from src.car_qr_service.config import settings
@@ -16,3 +16,15 @@ async_session_factory = async_sessionmaker(engine, expire_on_commit=False)
 # Всі наші моделі (User, Car) будуть успадковуватись від нього.
 class Base(DeclarativeBase):
     pass
+
+
+async def get_db_session() -> AsyncSession:
+    """
+    Функція-генератор для отримання сесії бази даних.
+    Використовується в FastAPI Depends для керування сесіями.
+    """
+    async with async_session_factory() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
