@@ -2,7 +2,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.car_qr_service.auth.utils import hash_password
+from src.car_qr_service.auth.security import hash_password
 from src.car_qr_service.database.models import User
 from src.car_qr_service.users.schemas import UserCreate
 
