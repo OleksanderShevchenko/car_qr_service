@@ -1,6 +1,10 @@
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.car_qr_service.auth.utils import get_current_user
+from src.car_qr_service.database.models import User
 
 from src.car_qr_service.database.database import get_db_session
 from src.car_qr_service.users import crud
@@ -35,3 +39,12 @@ async def create_new_user(
     # All right - creat new user
     new_user = await crud.create_user(body, db)
     return new_user
+
+
+@router.get("/me", response_model=UserRead, summary="Отримати дані поточного користувача")
+async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
+    """
+    Повертає дані про користувача, який зараз залогінений.
+    Доступ можливий тільки з валідним JWT-токеном.
+    """
+    return current_user
