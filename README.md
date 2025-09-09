@@ -1,101 +1,85 @@
-**Car QR Service**
+# **Car QR Service**
 
-It is my first learning project with FastAPI to make some valuable service, learn FastAPi and get fun.
+Це мій перший навчальний проєкт на FastAPI, мета якого — створити корисний сервіс, 
+вивчити FastAPI та отримати задоволення від процесу.
 
-**Для розробників**
+## **Для розробників**
 
-**2. Як сконфігурувати Alembic:**
-Alembic потрібно знати дві речі: 
-    1) до якої бази даних підключатись; 
-    2) де шукати наші моделі даних (`User`, `Car`).
-Одразу після клонування цього проєкт і створення віртуального середовища
-в терміналі вводимо команду ініціалізації Alembic:
+Ця інструкція допоможе вам налаштувати проєкт локально для розробки.
 
-    `poetry run alembic init -t async alembic`
+### **1. Початкове налаштування**
 
-* `-t async` — це шаблон для асинхронних проєктів, саме те, що нам потрібно.
-* `alembic` — назва директорія, куди будуть складатись файли конфігурації та самі міграції.
+Вимоги:
 
-Після виконання в вас має з'явиться файл `alembic.ini` та директорія `alembic`.
+Встановлений Python 3.10+
 
-* **Крок 2.1: Вказуємо шлях до БД.**
-    Відкрий файл `alembic.ini`. Знайди рядок `sqlalchemy.url = ...` і заміни його на URL з нашого файлу конфігурації:
-    ```ini
-    sqlalchemy.url = sqlite+aiosqlite:///./car_qr.db
-    ```
-    Ця url має збігатися з тим що у класі Settings з config.py
+Встановлений менеджер пакетів Poetry
 
+Кроки:
 
-* **Крок 2.2: Вказуємо, де наші моделі.**
-    Це найважливіший крок. Відкрий файл `alembic/env.py`.
-    * Знайди рядок `target_metadata = None` (приблизно рядок 25).
-    * Нам потрібно імпортувати базовий клас `Base` з наших моделей і всі самі моделі, щоб Alembic міг їх "побачити".
-    * Заміни блок коду від `from logging.config import fileConfig` до `target_metadata = None` на цей код:
+Клонуйте репозиторій:
 
-    ```python
-    # alembic/env.py - ПОЧАТОК ЗМІН
+`git clone <URL вашого репозиторію>`
+`cd car_qr_service`
 
-    import sys
-    from pathlib import Path
-    from sqlalchemy import pool
-    from sqlalchemy.engine import Connection
+Встановіть залежності:
+Ця команда створить віртуальне оточення та встановить усі необхідні бібліотеки з файлу pyproject.toml.
 
-    # Додаємо корінь проєкту (де лежить папка src) до шляхів пошуку модулів
-    # Це потрібно, щоб Alembic міг знайти наші модулі, такі як src.car_qr_service
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+`poetry install`
 
-    from logging.config import fileConfig
-    from sqlalchemy.ext.asyncio import create_async_engine, async_engine_from_config
-    from alembic import context
+Налаштуйте змінні оточення:
+Створіть файл **.env** у кореневій директорії проєкту. Найпростіше це зробити, скопіювавши файл-приклад:
 
-    # Імпортуємо наш базовий клас для моделей та самі моделі
-    from src.car_qr_service.database.database import Base
-    from src.car_qr_service.database.models import User, Car # noqa
-    # Імпортуємо наші налаштування, щоб взяти DB_URL
-    from src.car_qr_service.config import settings
+`cp .env.example .env`
 
-    # Це об'єкт Alembic Config, який надає доступ до
-    # значень у файлі .ini.
-    config = context.config
+Потім згенеруйте секретний ключ для JWT-токенів:
 
-    # Встановлюємо sqlalchemy.url з наших налаштувань
-    # Це гарантує, що Alembic і додаток дивляться на одну і ту ж БД
-    config.set_main_option('sqlalchemy.url', settings.DB_URL)
+`poetry run python -c "import secrets; print(secrets.token_hex(32))"`
 
-    # Інтерпретуємо конфігураційний файл для логування Python.
-    if config.config_file_name is not None:
-        fileConfig(config.config_file_name)
+Відкрийте файл .env і вставте згенерований ключ у змінну **JWT_SECRET_KEY**.
 
-    # target_metadata — це місце, де Alembic шукає моделі для автогенерації.
-    # Ми вказуємо йому на Base.metadata з нашого проєкту.
-    target_metadata = Base.metadata
+### **2. Налаштування бази даних (Alembic)**
 
-    # alembic/env.py - КІНЕЦЬ ЗМІН
-        **Примітка:** `# noqa` біля імпорту моделей каже лінтеру ігнорувати той факт, що ми нібито не використовуємо ці імпорти прямо в цьому файлі. Насправді вони потрібні, щоб SQLAlchemy зареєстрував моделі.
+Alembic — це наш інструмент для керування версіями схеми бази даних.
 
-**3. Створення першої міграції:**
-Тепер, коли Alembic налаштований, даймо йому команду порівняти наші моделі з порожньою базою даних і створити скрипт для приведення її у відповідність.
-```bash
-poetry run alembic revision --autogenerate -m "Create user and car tables"
-* `--autogenerate` — команда для автоматичного створення міграції.
-* `-m "..."` — коментар, який описує суть змін.
+Ініціалізація Alembic (виконується лише один раз):
+Якщо в проєкті ще немає папки alembic, виконайте цю команду:
 
-Якщо все правильно, у папці `alembic/versions` з'явиться новий Python-файл з дивною назвою (наприклад, `8d7c..._create_user_and_car_tables.py`). Це і є наша міграція.
+`poetry run alembic init -t async alembic`
 
-**4. Застосування міграції:**
-Останній крок — виконати цей скрипт.
-```bash
-poetry run alembic upgrade head
-Команда `upgrade head` застосовує всі міграції до останньої версії.
+_**-t async**_ — шаблон для асинхронних проєктів.
 
-Після цього в корені твого проєкту з'явиться файл `car_qr.db` (або те що ви вказали як назву). Це і є наша база даних SQLite, і всередині неї вже є таблиці `users` та `cars` з усіма полями, які ми визначили!
+Конфігурація alembic.ini:
+Переконайтесь, що в файлі alembic.ini рядок sqlalchemy.url відповідає шляху до вашої БД 
+(зазвичай він береться з налаштувань, тому цей крок можна пропустити, якщо env.py налаштований правильно).
 
-Спробуй виконати ці кроки. Це може здатися складним, але це одноразове налаштування, яке потім робить роботу з базою даних неймовірно зручною.
-```
-**4 Аутентифікація:**
+Конфігурація alembic/env.py:
+Alembic повинен знати про наші моделі SQLAlchemy. 
+Переконайтесь, що файл alembic/env.py налаштований на автоматичне зчитування метаданих з Base нашого проєкту. 
+Детальний код для цього кроку зазвичай вже є в репозиторії.
 
-Створіть файл `.env` у кореневій директорії проєкту.
-Сгенеруйте hash
-`python -c "import secrets; print(secrets.token_hex(32))"`
-Створіть ключ у файлі .env
-JWT_SECRET_KEY=<generated hash>
+Застосування міграцій:
+Щоб створити всі таблиці в базі даних, виконайте:
+
+`poetry run alembic upgrade head`
+
+Ця команда застосує всі існуючі міграції.
+
+### **3. Запуск застосунку**
+
+Для запуску веб-сервера виконайте команду:
+
+`poetry run uvicorn src.car_qr_service.main:app --reload --port 8001`
+
+_**--reload**_ автоматично перезавантажить сервер при зміні коду.
+
+**_--port 8001_** вказує порт для запуску.
+
+Після запуску API буде доступний за адресою http://127.0.0.1:8001, 
+а інтерактивна документація — http://127.0.0.1:8001/docs.
+
+### **4. Запуск тестів**
+
+Для запуску всіх автоматичних тестів виконайте команду:
+
+`poetry run pytest`
