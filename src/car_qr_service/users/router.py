@@ -41,7 +41,7 @@ async def create_new_user(
     return new_user
 
 
-@router.get("/me", response_model=UserRead, summary="Отримати дані поточного користувача")
+@router.get("/me", response_model=UserRead, summary="Get data of current user")
 async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
     """
     Повертає дані про користувача, який зараз залогінений.
