@@ -1,29 +1,29 @@
 import datetime
-from pydantic import BaseModel, EmailStr, Field
+from typing import Annotated
+
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+
+
+class BaseUser(BaseModel):
+    """Base schema for user data."""
+    email: EmailStr
+    phone_number: str
+    first_name: str | None = None
+    last_name: str | None = None
 
 
 # Schema to create new user
 # this king of data we are expecting in POST request
-class UserCreate(BaseModel):
-    email: EmailStr
-    phone_number: str
-    first_name: str
-    last_name: str
-    # пароль має бути від 8 до 32 символів
-    password: str = Field(..., min_length=8, max_length=32)
+class UserCreate(BaseUser):
+    password: Annotated[str, Field(min_length=8)]
 
 
 # Schema to read data of existing user
 # that what we expect to get in result of request
-class UserRead(BaseModel):
+class UserRead(BaseUser):
     id: int
-    email: EmailStr
-    phone_number: str
-    first_name: str
-    last_name: str
     created_at: datetime.datetime
 
     # This configuration allows Pydantic to read data
     # from SQLAlchemy objects - our model classes
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
