@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from src.car_qr_service.users.router import router as users_router
 from src.car_qr_service.auth.router import router as login_user
+from src.car_qr_service.cars.router import router as car_router
 
 
 app = FastAPI(title="Car QR Service",
@@ -10,6 +11,7 @@ app = FastAPI(title="Car QR Service",
 # include routers
 app.include_router(users_router)
 app.include_router(login_user)
+app.include_router(car_router)
 
 
 @app.get("/")
