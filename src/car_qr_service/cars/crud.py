@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.car_qr_service.cars.schemas import CarCreate
+from src.car_qr_service.cars.schemas import CarCreate, CarUpdate
 from src.car_qr_service.database.models import Car
 
 
@@ -30,3 +30,24 @@ async def get_user_cars(db: AsyncSession, owner_id: int) -> list[Car]:
     query = select(Car).where(Car.owner_id == owner_id)
     result = await db.execute(query)
     return list(result.scalars().all())
+
+async def get_car_by_id(db: AsyncSession, car_id: int) -> Car | None:
+    """Отримує автомобіль за його ID."""
+    result = await db.execute(select(Car).filter(Car.id == car_id))
+    return result.scalars().first()
+
+
+async def update_car(db: AsyncSession, car: Car, car_update: CarUpdate) -> Car:
+    """Оновлює дані автомобіля."""
+    update_data = car_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(car, key, value)
+    await db.commit()
+    await db.refresh(car)
+    return car
+
+
+async def delete_car(db: AsyncSession, car: Car):
+    """Видаляє автомобіль з бази даних."""
+    await db.delete(car)
+    await db.commit()
