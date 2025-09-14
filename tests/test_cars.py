@@ -121,3 +121,90 @@ def test_get_my_cars_does_not_show_other_users_cars(client: TestClient):
     assert response.status_code == 200
     assert response.json() == []
 
+
+
+def create_car_for_user(client: TestClient, token: str, car_suffix: str = "") -> dict:
+    """Допоміжна функція для створення авто та повернення його даних."""
+    headers = {"Authorization": f"Bearer {token}"}
+    car_data = {
+        "license_plate": f"PLATE-{car_suffix}",
+        "brand": f"Brand-{car_suffix}",
+        "model": f"Model-{car_suffix}",
+    }
+    response = client.post("/cars/", json=car_data, headers=headers)
+    assert response.status_code == 201
+    return response.json()
+
+
+# --- Тести для оновлення ---
+def test_update_my_car_success(client: TestClient):
+    """Тест: користувач успішно оновлює свій автомобіль."""
+    token = get_auth_token(client, "update01")
+    car = create_car_for_user(client, token, "U01")
+    car_id = car["id"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    update_data = {"license_plate": "NEW-PLATE"}
+    response = client.patch(f"/cars/{car_id}", json=update_data, headers=headers)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["license_plate"] == "NEW-PLATE"
+    assert data["brand"] == car["brand"]
+
+
+def test_update_other_user_car_forbidden(client: TestClient):
+    """Тест: користувач не може оновити автомобіль іншого користувача."""
+    token1 = get_auth_token(client, "update02")
+    token2 = get_auth_token(client, "update03")
+    car = create_car_for_user(client, token1, "U02")
+    car_id = car["id"]
+
+    headers_user2 = {"Authorization": f"Bearer {token2}"}
+    update_data = {"license_plate": "HACKED"}
+    response = client.patch(f"/cars/{car_id}", json=update_data, headers=headers_user2)
+    assert response.status_code == 403
+
+
+# --- Тести для видалення ---
+def test_delete_one_of_multiple_cars(client: TestClient):
+    """Тест: у користувача є кілька авто, він видаляє одне, і список оновлюється."""
+    # Arrange: Створюємо користувача і додаємо йому ДВА авто
+    token = get_auth_token(client, "del01")
+    headers = {"Authorization": f"Bearer {token}"}
+    car1 = create_car_for_user(client, token, "D01A")
+    create_car_for_user(client, token, "D01B")
+    car_to_delete_id = car1["id"]
+
+    # Перевіряємо, що в користувача справді 2 авто
+    response_get = client.get("/cars/", headers=headers)
+    assert len(response_get.json()) == 2
+
+    # Act: Видаляємо одне з авто
+    response_delete = client.delete(f"/cars/{car_to_delete_id}", headers=headers)
+    assert response_delete.status_code == 204
+
+    # Assert: Перевіряємо, що в списку залишилось тільки одне авто
+    response_get_after = client.get("/cars/", headers=headers)
+    assert response_get_after.status_code == 200
+    cars_after = response_get_after.json()
+    assert len(cars_after) == 1
+    assert cars_after[0]["id"] != car_to_delete_id
+
+
+def test_delete_other_user_car_forbidden(client: TestClient):
+    """Тест: користувач не може видалити автомобіль іншого користувача."""
+    token1 = get_auth_token(client, "del02")
+    token2 = get_auth_token(client, "del03")
+    car = create_car_for_user(client, token1, "D02")
+    car_id = car["id"]
+
+    headers_user2 = {"Authorization": f"Bearer {token2}"}
+    response = client.delete(f"/cars/{car_id}", headers=headers_user2)
+    assert response.status_code == 403
+
+    # Переконуємось, що авто не було видалено
+    headers_user1 = {"Authorization": f"Bearer {token1}"}
+    response_get = client.get("/cars/", headers=headers_user1)
+    assert len(response_get.json()) == 1
+
