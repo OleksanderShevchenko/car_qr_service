@@ -51,3 +51,10 @@ async def delete_car(db: AsyncSession, car: Car):
     """Видаляє автомобіль з бази даних."""
     await db.delete(car)
     await db.commit()
+
+
+async def get_car_by_license_plate(db: AsyncSession, license_plate: str) -> Car | None:
+    """Отримує автомобіль за його номерним знаком."""
+    query = select(Car).where(Car.license_plate == license_plate)
+    result = await db.execute(query)
+    return result.scalars().first()
