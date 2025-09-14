@@ -32,3 +32,15 @@ class CarUpdate(BaseModel):
     model: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PublicCarInfo(BaseModel):
+    """
+    Схема для публічної інформації про автомобіль.
+    Показує тільки безпечні дані (марка та модель).
+    """
+    brand: str
+    model: str
+
+    model_config = ConfigDict(from_attributes=True)
+
