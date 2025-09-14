@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.car_qr_service.cars.schemas import CarCreate
@@ -17,3 +18,15 @@ async def create_car(db: AsyncSession, car: CarCreate, owner_id: int) -> Car:
     await db.commit()
     await db.refresh(db_car)
     return db_car
+
+
+async def get_user_cars(db: AsyncSession, owner_id: int) -> list[Car]:
+    """
+    Повертає список автомобілів, що належать конкретному користувачу.
+    :param db: Сесія бази даних.
+    :param owner_id: ID користувача-власника.
+    :return: Список об'єктів SQLAlchemy моделі Car.
+    """
+    query = select(Car).where(Car.owner_id == owner_id)
+    result = await db.execute(query)
+    return list(result.scalars().all())

@@ -31,3 +31,24 @@ async def add_new_car(
     """
     new_car = await crud.create_car(db=db, car=body, owner_id=current_user.id)
     return new_car
+
+
+@router.get(
+    "/",
+    response_model=list[CarRead],
+    summary="Отримати список своїх автомобілів"
+)
+async def get_my_cars(
+    # Ця залежність робить ендпоінт захищеним.
+    # Якщо токен невалідний, код далі не виконається.
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+):
+    """
+    Endpoint для отримання списку автомобілів,
+    що належать поточному залогіненому користувачу.
+    """
+    # Ми передаємо ID поточного користувача в CRUD-функцію,
+    # щоб отримати тільки його автомобілі.
+    cars = await crud.get_user_cars(db=db, owner_id=current_user.id)
+    return cars
