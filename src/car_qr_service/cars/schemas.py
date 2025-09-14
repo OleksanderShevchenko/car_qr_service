@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -17,5 +19,16 @@ class CarRead(CarBase):
     """Схема для читання даних про автомобіль (вихідні дані)."""
     id: int
     owner_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+class CarUpdate(BaseModel):
+    """
+    Схема для оновлення автомобіля. Всі поля опціональні.
+    """
+
+    license_plate: Optional[str] = None
+    brand: Optional[str] = None
+    model: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
