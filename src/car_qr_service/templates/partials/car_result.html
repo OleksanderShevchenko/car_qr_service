@@ -1,0 +1,14 @@
+{% if car %}
+    <!-- Якщо автомобіль знайдено -->
+    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md" role="alert">
+        <p class="font-bold">Автомобіль знайдено</p>
+        <p>Марка: {{ car.brand }}</p>
+        <p>Модель: {{ car.model }}</p>
+    </div>
+{% else %}
+    <!-- Якщо автомобіль не знайдено -->
+    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
+        <p class="font-bold">Помилка</p>
+        <p>{{ detail }}</p>
+    </div>
+{% endif %}
