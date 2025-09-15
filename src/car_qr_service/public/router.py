@@ -13,7 +13,7 @@ router = APIRouter(prefix="/public", tags=["public"])
 @router.get(
     "/cars/{license_plate}",
     response_model=PublicCarInfo,
-    summary="Знайти авто за номерним знаком",
+    summary="Find auto by its license plate and get public infor",
 )
 async def find_car_by_plate(
     license_plate: str,
