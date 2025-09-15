@@ -70,3 +70,26 @@ async def search_car_for_htmx(
     # Рендеримо відповідний HTML
     # Render the corresponding HTML
     return templates.TemplateResponse("partials/car_result.html", context)
+
+
+@router.post("/send-sms/{license_plate}", response_class=HTMLResponse)
+async def send_sms_stub(
+    license_plate: str,
+    message: Annotated[str, Form()],
+):
+    """
+    Ендпоінт-заглушка для форми відправки SMS.
+    Наразі він не робить нічого, лише повертає повідомлення про успіх.
+    Endpoint stub for SMS sending form.
+    Currently it does nothing but returns a success message.
+    """
+    # У майбутньому тут буде логіка інтеграції з SMS-сервісом.
+    # Ми б використовували `license_plate`, щоб знайти номер власника.
+    # In the future, there will be logic here to integrate with the SMS service.
+    # We would use `license_plate` to find the owner's number.
+    print(f"Імітація відправки SMS для авто {license_plate} з повідомленням: '{message}'")
+
+    # Повертаємо простий HTML, який HTMX вставить у div#sms-status
+    return HTMLResponse(
+        content='<span class="text-green-600">✓ Повідомлення надіслано!</span>'
+    )
