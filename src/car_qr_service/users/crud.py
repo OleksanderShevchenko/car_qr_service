@@ -23,7 +23,8 @@ async def create_user(body: UserCreate, db: AsyncSession) -> User:
         first_name=body.first_name,
         last_name=body.last_name,
         # Важливо: хешуємо пароль перед збереженням!
-        hashed_password=hash_password(body.password)
+        hashed_password=hash_password(body.password),
+        show_phone_number = body.show_phone_number,
     )
     # Add new user in database session
     db.add(new_user)
