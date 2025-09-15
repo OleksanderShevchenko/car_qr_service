@@ -1,20 +1,34 @@
 from starlette.testclient import TestClient
 
 
-def get_auth_token(client: TestClient, user_suffix: str = "") -> str:
+def get_auth_token(client: TestClient,
+                   user_suffix: str = "",
+                   show_phone: bool = False) -> str:
     """Допоміжна функція для створення користувача та отримання токену."""
     user_data = {
         "email": f"car_test{user_suffix}@example.com",
         "phone_number": f"+380991234567{user_suffix}",  # Ensure unique phone numbers
         "password": "testpassword",
+        "show_phone_number": show_phone,  # add new field
     }
-    # Створюємо користувача (ігноруємо відповідь, якщо він вже існує)
-    client.post("/users/", json=user_data)
-
-    # Отримуємо токен
-    login_data = {"username": user_data["email"], "password": user_data["password"]}
+    # try to create new user
+    response = client.post("/users/", json=user_data)
+    if response.status_code != 201:
+        # If user already exists, try to log in instead
+        login_data = {
+            "username": user_data["email"],
+            "password": user_data["password"],
+        }
+        response = client.post("/auth/token", data=login_data)
+        assert response.status_code == 200, "Failed to log in existing test user"
+        return response.json()["access_token"]
+    # get token for a new user
+    login_data = {
+        "username": user_data["email"],
+        "password": user_data["password"],
+    }
     response = client.post("/auth/token", data=login_data)
-    assert response.status_code == 200
+    assert response.status_code == 200, "Failed to get token for new test user"
     return response.json()["access_token"]
 
 
@@ -27,5 +41,5 @@ def create_car_for_user(client: TestClient, token: str, car_suffix: str = "") ->
         "model": f"Model-{car_suffix}",
     }
     response = client.post("/cars/", json=car_data, headers=headers)
-    assert response.status_code == 201
+    assert response.status_code == 201, "Failed to create a car for a test user"
     return response.json()
