@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.car_qr_service.cars.schemas import CarCreate, CarUpdate
 from src.car_qr_service.database.models import Car
@@ -54,7 +55,15 @@ async def delete_car(db: AsyncSession, car: Car):
 
 
 async def get_car_by_license_plate(db: AsyncSession, license_plate: str) -> Car | None:
-    """Отримує автомобіль за його номерним знаком."""
-    query = select(Car).where(Car.license_plate == license_plate)
+    """
+    Отримує автомобіль за його номерним знаком.
+    В оптимізованому варіанті додаємо дані про користувача,
+    Щоб в шаблоні результатів відображати телефон, якщо користувач дозволив
+    """
+    query = (
+        select(Car)
+        .options(selectinload(Car.owner))  # add user data
+        .where(Car.license_plate == license_plate)
+    )
     result = await db.execute(query)
     return result.scalars().first()
