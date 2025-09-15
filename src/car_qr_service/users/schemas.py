@@ -10,6 +10,7 @@ class BaseUser(BaseModel):
     phone_number: str
     first_name: str | None = None
     last_name: str | None = None
+    show_phone_number: bool = False
 
 
 # Schema to create new user
