@@ -60,3 +60,60 @@ def test_find_car_by_plate_not_found(client: TestClient, db_session: AsyncSessio
     # Act: Робимо публічний запит до нового endpoint-у
     response = client.get(f"/public/cars/AO1234BО")  # change one letter in the license plate
     assert response.status_code == 404
+
+
+def test_find_car_by_plate_hides_phone_by_default(
+        client: TestClient, db_session: AsyncSession
+):
+    """
+    Test: Search for a car whose owner has hidden the phone number.
+    The number should not be displayed in the HTML response.
+    """
+    # Arrange: Створюємо користувача, який НЕ хоче показувати свій номер (за замовчуванням)
+    user_suffix = "public_hide"
+    token = get_auth_token(client, user_suffix=user_suffix, show_phone=False)
+    car_data = create_car_for_user(client, token, car_suffix="H01")
+    license_plate = car_data["license_plate"]
+
+    # Потрібно закомітити транзакцію, щоб зробити дані видимими для наступного запиту
+    asyncio.run(db_session.commit())
+
+    # Act: Робимо запит до HTMX-ендпоінту, передаючи дані як форма
+    response = client.post("/public/search", data={"license_plate": license_plate})
+
+    # Assert: Перевіряємо, що авто знайдено, а номер телефону прихований
+    assert response.status_code == 200
+    assert "Власник приховав номер" in response.text
+    assert f"+380991234567{user_suffix}" not in response.text
+
+
+def test_find_car_by_plate_shows_phone_when_allowed(
+        client: TestClient, db_session: AsyncSession
+):
+    """
+    Test: Search for a car whose owner has allowed showing the phone number.
+    The number should be displayed in the HTML response.
+    """
+    # Arrange: Створюємо користувача, який ХОЧЕ показувати свій номер
+    user_suffix = "public_show"
+    token = get_auth_token(client, user_suffix=user_suffix, show_phone=True)
+    car_data = create_car_for_user(client, token, car_suffix="S01")
+    license_plate = car_data["license_plate"]
+
+    # Потрібно закомітити транзакцію, щоб зробити дані видимими для наступного запиту
+    asyncio.run(db_session.commit())
+
+    # Act: Робимо запит до HTMX-ендпоінту, передаючи дані як форма
+    response = client.post("/public/search", data={"license_plate": license_plate})
+
+    # Assert: Перевіряємо, що авто знайдено, а номер телефону видимий
+    assert response.status_code == 200
+    assert "Власник приховав номер" not in response.text
+    assert f"+380991234567{user_suffix}" in response.text
+
+
+def test_find_car_by_plate_not_found_htmx(client: TestClient):
+    """Test: Searching for a non-existent car via HTMX returns a special message."""
+    response = client.post("/public/search", data={"license_plate": "NONEXISTENT"})
+    assert response.status_code == 200  # HTMX endpoint always returns 200 OK
+    assert "Автомобіль з таким номером не знайдено" in response.text
