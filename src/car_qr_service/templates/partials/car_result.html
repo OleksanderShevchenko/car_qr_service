@@ -14,7 +14,7 @@
                 <dd class="mt-1 text-sm text-gray-900">{{ car.model }}</dd>
             </div>
 
-            <!-- НОВИЙ БЛОК: Відображаємо телефон власника або заглушку -->
+            <!-- БЛОК: Відображаємо телефон власника або заглушку -->
             <div class="sm:col-span-2">
                 <dt class="text-sm font-medium text-gray-500">Телефон власника</dt>
                 <dd class="mt-1 text-sm text-gray-900">
@@ -29,19 +29,28 @@
         </dl>
     </div>
 
-    <!-- НОВИЙ БЛОК: Форма для відправки SMS (наразі заглушка) -->
-    <div class="mt-6 border-t border-gray-200 pt-5">
-         <form hx-post="/public/send-sms/{{ car.license_plate }}" hx-target="#sms-status" hx-swap="innerHTML">
-            <label for="sms_message" class="block text-sm font-medium text-gray-700">Надіслати повідомлення власнику:</label>
+    <!-- БЛОК: Форма для ініціювання дзвінка -->
+    <div id="call-section-{{ car.license_plate | urlencode }}" class="mt-6 border-t border-gray-200 pt-5">
+         <form hx-post="/public/initiate-call" hx-target="#call-section-{{ car.license_plate | urlencode }}" hx-swap="outerHTML">
+            <label class="block text-sm font-medium text-gray-700">Здійснити анонімний дзвінок:</label>
+            <input type="hidden" name="license_plate" value="{{ car.license_plate }}">
+            <button type="submit" class="mt-2 inline-flex items-center rounded-md bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600">
+                📞 Зателефонувати власнику
+            </button>
+        </form>
+    </div>
+
+    <!-- БЛОК: Форма для відправки SMS -->
+    <div id="sms-section-{{ car.license_plate | urlencode }}" class="mt-6 border-t border-gray-200 pt-5">
+         <form hx-post="/public/send-sms" hx-target="#sms-section-{{ car.license_plate | urlencode }}" hx-swap="outerHTML">
+            <label for="sms_message-{{ car.license_plate }}" class="block text-sm font-medium text-gray-700">Надіслати повідомлення власнику:</label>
             <div class="mt-1">
-                <textarea id="sms_message" name="message" rows="3" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Наприклад: Ваше авто заважає проїзду..."></textarea>
+                <textarea id="sms_message-{{ car.license_plate }}" name="message" rows="3" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Наприклад: Ваше авто заважає проїзду..." required></textarea>
             </div>
-            <div class="mt-2 flex items-center justify-between">
+            <div class="mt-2">
                 <button type="submit" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                    Надіслати SMS
+                    ✉️ Надіслати SMS
                 </button>
-                {# HTMX вставить результат відправки SMS сюди #}
-                <div id="sms-status" class="text-sm"></div>
             </div>
         </form>
     </div>

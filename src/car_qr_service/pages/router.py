@@ -27,4 +27,4 @@ async def get_main_page(request: Request):
     """
     # We simply render the index.html file and pass the request object into it
     # Ми просто рендеримо файл index.html і передаємо в нього об'єкт request
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")

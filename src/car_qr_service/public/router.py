@@ -69,7 +69,7 @@ async def search_car_for_htmx(
 
     # Рендеримо відповідний HTML
     # Render the corresponding HTML
-    return templates.TemplateResponse("partials/car_result.html", context)
+    return templates.TemplateResponse(request, "partials/car_result.html", context)
 
 
 @router.post("/send-sms/{license_plate}", response_class=HTMLResponse)
@@ -92,4 +92,19 @@ async def send_sms_stub(
     # Повертаємо простий HTML, який HTMX вставить у div#sms-status
     return HTMLResponse(
         content='<span class="text-green-600">✓ Повідомлення надіслано!</span>'
+    )
+
+
+# --- НОВИЙ ЕНДПОІНТ №4: ЗАГЛУШКА ДЛЯ ДЗВІНКА ---
+@router.post("/initiate-call", response_class=HTMLResponse)
+async def initiate_call_stub(
+    request: Request,
+    license_plate: Annotated[str, Form()],
+):
+    """
+    Ендпоінт-заглушка для імітації телефонного дзвінка.
+    """
+    print(f"Initiating call to owner of {license_plate}")
+    return templates.TemplateResponse(
+        request, "partials/call_success.html", {"license_plate": license_plate}
     )
