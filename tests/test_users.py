@@ -105,7 +105,7 @@ def test_login_for_access_token_failure_wrong_password(client: TestClient):
     # Очікуємо статус 401 Unauthorized
     assert response.status_code == 401
     error_data = response.json()
-    assert error_data["detail"] == "Incorrect email or password"
+    assert error_data["detail"] == "Incorrect username or password"
 
     # 5. Prepare data for LogIn.
     # Use incorrect username
@@ -121,4 +121,4 @@ def test_login_for_access_token_failure_wrong_password(client: TestClient):
     # Очікуємо статус 401 Unauthorized
     assert response.status_code == 401
     error_data = response.json()
-    assert error_data["detail"] == "Incorrect email or password"
+    assert error_data["detail"] == "Incorrect username or password"
