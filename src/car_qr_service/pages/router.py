@@ -87,15 +87,22 @@ async def handle_login(
 @router.get("/cabinet", response_class=HTMLResponse)
 async def get_cabinet_page(
     request: Request,
-    # Ця залежність захищає ендпоінт. Якщо користувач не залогінений,
-    # він отримає помилку 401. Ми покращимо це пізніше.
-    current_user: Annotated[User, Depends(get_current_user_from_cookie)],
+    # 1. Використовуємо нового "охоронця", який читає з cookie і може повернути None
+    current_user: Annotated[
+        Optional[User], Depends(get_current_user_from_cookie)
+    ],
 ):
     """
-    Віддає сторінку особистого кабінету.
-    Доступно тільки для автентифікованих користувачів.
+    Serves the user's personal cabinet page.
+    Redirects to login page if user is not authenticated.
     """
-    # Передаємо об'єкт користувача в шаблон, щоб показати його ім'я
+    # 2. Додаємо перевірку: якщо користувача немає, робимо редірект
+    if current_user is None:
+        return RedirectResponse(
+            url="/pages/login", status_code=status.HTTP_302_FOUND
+        )
+
+    # 3. Якщо все добре, віддаємо сторінку
     context = {"request": request, "user": current_user}
     return templates.TemplateResponse(request, "pages/cabinet.html", context)
 
