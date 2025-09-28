@@ -6,14 +6,88 @@
     Вітаємо, {{ user.first_name or user.email }}!
 {% endblock %}
 
+
 {% block content %}
-<div class="bg-white p-8 rounded-lg shadow-md">
-    <h2 class="text-2xl font-semibold mb-4">Ваш особистий кабінет</h2>
-    <p class="text-gray-600">
-        Тут ви зможете керувати своїми автомобілями, генерувати QR-коди та оновлювати дані профілю.
-    </p>
+<div class="space-y-12">
+    <!-- Секція для додавання нового авто -->
+    <div class="border-b border-gray-900/10 pb-12">
+        <h2 class="text-xl font-semibold leading-7 text-gray-900">Додати новий автомобіль</h2>
+        <p class="mt-1 text-sm leading-6 text-gray-600">Введіть дані вашого автомобіля, щоб згенерувати для нього QR-код.</p>
 
-    <!-- В майбутньому тут буде список авто, форми тощо -->
+        <!-- Форма для додавання авто з HTMX -->
+        <form
+            hx-post="/pages/cabinet/add-car"
+            hx-target="#car-list-body"
+            hx-swap="beforeend"
+            hx-on::after-request="this.reset()"
+            class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6"
+        >
+            <div class="sm:col-span-2">
+                <label for="license_plate" class="block text-sm font-medium leading-6 text-gray-900">Держ. номер</label>
+                <div class="mt-2">
+                    <input type="text" name="license_plate" id="license_plate" required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="AA1234BB">
+                </div>
+            </div>
 
+            <div class="sm:col-span-2">
+                <label for="brand" class="block text-sm font-medium leading-6 text-gray-900">Марка</label>
+                <div class="mt-2">
+                    <input type="text" name="brand" id="brand" required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Toyota">
+                </div>
+            </div>
+
+            <div class="sm:col-span-2">
+                <label for="model" class="block text-sm font-medium leading-6 text-gray-900">Модель</label>
+                <div class="mt-2">
+                    <input type="text" name="model" id="model" required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Camry">
+                </div>
+            </div>
+
+            <div class="sm:col-span-6 flex items-center justify-end">
+                 <button type="submit" class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    Додати авто
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Секція зі списком існуючих авто -->
+    <div class="border-b border-gray-900/10 pb-12">
+        <h2 class="text-xl font-semibold leading-7 text-gray-900">Ваші автомобілі</h2>
+
+        <div class="mt-6 flow-root">
+            <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                    <div
+                        class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
+                    >
+                        <table class="min-w-full divide-y divide-gray-300">
+                            <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Держ. номер</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Марка</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Модель</th>
+                                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-semibold text-gray-900">QR-код</th>
+                            </tr>
+                            </thead>
+                            <tbody id="car-list-body" class="divide-y divide-gray-200 bg-white">
+                                {% if cars %}
+                                    {% for car in cars %}
+                                        {% include "partials/car_row.html" %}
+                                    {% endfor %}
+                                {% else %}
+                                    <tr id="no-cars-row">
+                                        <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                                            У вас ще немає доданих автомобілів.
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
