@@ -1,4 +1,4 @@
-from typing import Annotated, AsyncGenerator
+from typing import Annotated, AsyncGenerator, Optional
 
 from fastapi import APIRouter, Request, Depends, Form, Request, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -9,6 +9,8 @@ from src.car_qr_service.auth.utils import get_current_user, authenticate_user, c
     get_current_user_from_cookie
 from src.car_qr_service.database.database import get_db_session
 from src.car_qr_service.database.models import User
+from src.car_qr_service.users import crud as users_crud
+from src.car_qr_service.users.schemas import UserCreate
 
 # Створюємо роутер
 # Create a router
@@ -96,3 +98,54 @@ async def get_cabinet_page(
     # Передаємо об'єкт користувача в шаблон, щоб показати його ім'я
     context = {"request": request, "user": current_user}
     return templates.TemplateResponse(request, "pages/cabinet.html", context)
+
+
+@router.get("/register", response_class=HTMLResponse)
+async def get_register_page(request: Request):
+    """
+    Віддає сторінку реєстрації користувача.
+    """
+    return templates.TemplateResponse(request, "pages/register.html")
+
+
+@router.post("/register")
+async def handle_registration(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    email: str = Form(...),
+    phone_number: str = Form(...),
+    password: str = Form(...),
+    first_name: Optional[str] = Form(None),
+    last_name: Optional[str] = Form(None),
+    show_phone_number: bool = Form(False),
+):
+    """
+    Обробляє дані з форми реєстрації.
+    Створює нового користувача і автоматично логінить його.
+    """
+    existing_user = await users_crud.get_user_by_email(email, db)
+    if existing_user:
+        # В реальному додатку тут варто показувати повідомлення про помилку
+        return RedirectResponse(
+            url="/pages/register?error=exists", status_code=status.HTTP_302_FOUND
+        )
+
+    user_data = UserCreate(
+        email=email,
+        phone_number=phone_number,
+        password=password,
+        first_name=first_name or "",
+        last_name=last_name or "",
+        show_phone_number=show_phone_number,
+    )
+
+    user = await users_crud.create_user(user_data, db)
+
+    # Автоматично логінимо нового користувача
+    access_token = create_access_token(data={"sub": user.email})
+    response = RedirectResponse(
+        url="/pages/cabinet", status_code=status.HTTP_302_FOUND
+    )
+    response.set_cookie(
+        key="access_token", value=f"Bearer {access_token}", httponly=True
+    )
+    return response
