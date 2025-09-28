@@ -1,7 +1,9 @@
-from typing import Annotated, AsyncGenerator, Optional
+from typing import Annotated, Optional
+import qrcode
+import io
 
-from fastapi import APIRouter, Request, Depends, Form, Request, Response, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Request, Depends, Form, Request, Response, status, HTTPException
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,7 +12,9 @@ from src.car_qr_service.auth.utils import get_current_user, authenticate_user, c
 from src.car_qr_service.database.database import get_db_session
 from src.car_qr_service.database.models import User
 from src.car_qr_service.users import crud as users_crud
+from src.car_qr_service.cars import crud as cars_crud
 from src.car_qr_service.users.schemas import UserCreate
+from src.car_qr_service.cars.schemas import CarCreate
 
 # Створюємо роутер
 # Create a router
@@ -50,11 +54,11 @@ async def get_login_page(request: Request):
 
 @router.post("/login", response_class=HTMLResponse)
 async def handle_login(
-    response: Response,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    # FastAPI автоматично візьме дані з форми
-    email: str = Form(..., alias="username"),
-    password: str = Form(...),
+        response: Response,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        # FastAPI автоматично візьме дані з форми
+        email: str = Form(..., alias="username"),
+        password: str = Form(...),
 ):
     """
     Handles the login form submission.
@@ -86,25 +90,89 @@ async def handle_login(
 
 @router.get("/cabinet", response_class=HTMLResponse)
 async def get_cabinet_page(
-    request: Request,
-    # 1. Використовуємо нового "охоронця", який читає з cookie і може повернути None
-    current_user: Annotated[
-        Optional[User], Depends(get_current_user_from_cookie)
-    ],
+        request: Request,
+        # 1. Використовуємо нового "охоронця", який читає з cookie і може повернути None
+        current_user: Annotated[
+            Optional[User], Depends(get_current_user_from_cookie)
+        ],
+        db: Annotated[AsyncSession, Depends(get_db_session)],
 ):
     """
     Serves the user's personal cabinet page.
     Redirects to login page if user is not authenticated.
     """
-    # 2. Додаємо перевірку: якщо користувача немає, робимо редірект
+    # 1. Додаємо перевірку: якщо користувача немає, робимо редірект
     if current_user is None:
         return RedirectResponse(
             url="/pages/login", status_code=status.HTTP_302_FOUND
         )
 
-    # 3. Якщо все добре, віддаємо сторінку
-    context = {"request": request, "user": current_user}
+    # 2. Якщо все добре, зчитуємо з бази усі авта користувача і віддаємо сторінку
+    # Отримуємо список авто поточного користувача
+    user_cars = await cars_crud.get_user_cars(db, owner_id=current_user.id)
+
+    context = {
+        "request": request,
+        "user": current_user,
+        "cars": user_cars,  # Передаємо список авто в шаблон
+    }
     return templates.TemplateResponse(request, "pages/cabinet.html", context)
+
+
+@router.post("/cabinet/add-car", response_class=HTMLResponse)
+async def handle_add_car(
+        request: Request,
+        current_user: Annotated[User, Depends(get_current_user_from_cookie)],
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        license_plate: str = Form(...),
+        brand: str = Form(...),
+        model: str = Form(...),
+):
+    """
+    Handles the "Add Car" form submission via HTMX.
+    """
+    if not current_user:
+        return HTMLResponse(content="Not authorized", status_code=401)
+
+    car_data = CarCreate(license_plate=license_plate, brand=brand, model=model)
+    new_car = await cars_crud.create_car(db=db, car=car_data, owner_id=current_user.id)
+
+    context = {"request": request, "car": new_car}
+    return templates.TemplateResponse(request, "partials/car_row.html", context)
+
+
+@router.get("/qr-code/{license_plate}")
+async def generate_qr_code(
+        license_plate: str,
+        current_user: Annotated[User, Depends(get_current_user_from_cookie)],
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+):
+    """
+    Generates a QR code image for a specific car.
+    Only the owner can generate the QR code.
+    """
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    car = await cars_crud.get_car_by_license_plate(db, license_plate)
+
+    if not car or car.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not your car")
+
+    # Формуємо URL для публічної сторінки
+    # В реальному житті тут має бути ваш домен
+    public_url = f"http://127.0.0.1:8001/public/cars/{license_plate}"
+
+    # Генеруємо QR-код
+    qr_img = qrcode.make(public_url)
+
+    # Зберігаємо зображення в буфер в пам'яті
+    buffer = io.BytesIO()
+    qr_img.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    # Повертаємо зображення
+    return StreamingResponse(buffer, media_type="image/png")
 
 
 @router.get("/register", response_class=HTMLResponse)
@@ -117,13 +185,13 @@ async def get_register_page(request: Request):
 
 @router.post("/register")
 async def handle_registration(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    email: str = Form(...),
-    phone_number: str = Form(...),
-    password: str = Form(...),
-    first_name: Optional[str] = Form(None),
-    last_name: Optional[str] = Form(None),
-    show_phone_number: bool = Form(False),
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        email: str = Form(...),
+        phone_number: str = Form(...),
+        password: str = Form(...),
+        first_name: Optional[str] = Form(None),
+        last_name: Optional[str] = Form(None),
+        show_phone_number: bool = Form(False),
 ):
     """
     Обробляє дані з форми реєстрації.
