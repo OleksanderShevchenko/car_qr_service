@@ -1,7 +1,7 @@
 import datetime
-from typing import Annotated
+from typing import Annotated, Optional
 
-from fastapi import Depends, HTTPException, status, Cookie
+from fastapi import Depends, HTTPException, status, Cookie, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,7 +11,6 @@ from src.car_qr_service.config import settings
 from src.car_qr_service.database.database import get_db_session
 from src.car_qr_service.database.models import User
 from src.car_qr_service.users import crud as users_crud
-
 
 # Create schema OAuth2.
 # tokenUrl pointing to endpoint, where the client can get token.
@@ -45,10 +44,17 @@ async def authenticate_user(email: str,
     return user
 
 
+# --- ОХОРОНЕЦЬ №1: ДЛЯ JSON API ---
+# Він вимагає токен в заголовку і кидає помилку HTTPException.
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
                            db: Annotated[AsyncSession, Depends(get_db_session)]) -> User:
     """
-    dependence function to get current user by JWT-token.
+    Отримує поточного користувача з токена JWT у заголовку авторизації.
+    Підвищує httpexception, якщо автентифікація не вдається.
+    Використовується для кінцевих точок API.
+    Gets the current user from the JWT token in the Authorization header.
+    Raises HTTPException if authentication fails.
+    Used for API endpoints.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -56,7 +62,9 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        payload = jwt.decode(token,
+                             settings.JWT_SECRET_KEY,
+                             algorithms=[settings.JWT_ALGORITHM])
         email: str | None = payload.get("sub")
         if email is None:
             raise credentials_exception
@@ -69,35 +77,35 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
     return user
 
 
+# --- ОХОРОНЕЦЬ №2: ДЛЯ ВЕБ-СТОРІНОК ---
+# Він читає токен з cookie і повертає None, якщо щось не так.
 async def get_current_user_from_cookie(
-    access_token: str | None = Cookie(default=None),
-    db: AsyncSession = Depends(get_db_session),
-) -> User:
+        request: Request,
+        db: AsyncSession = Depends(get_db_session),
+) -> Optional[User]:
     """
-    Reads and validates the JWT token from the browser's cookie.
+    Gets the current user from the JWT token stored in the browser cookie.
+    Returns None if the user is not authenticated.
+    Used for web page endpoints that need redirection.
     """
-    if access_token is None:
-        # Якщо cookie немає, перенаправляємо на сторінку входу
-        raise HTTPException(
-            status_code=status.HTTP_302_FOUND,
-            detail="Not authenticated",
-            headers={"Location": "/pages/login"},
-        )
+    access_token = request.cookies.get("access_token")
 
-    # Токен з cookie містить "Bearer ", прибираємо це
-    token = access_token.split(" ")[-1]
+    if not access_token:
+        return None
 
     try:
+        scheme, _, param = access_token.partition(" ")
+        if scheme.lower() != "bearer":
+            return None
+
         payload = jwt.decode(
-            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+            param, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
         )
         email: str | None = payload.get("sub")
         if email is None:
-            raise HTTPException(status_code=401, detail="Invalid token payload")
+            return None
     except JWTError:
-        raise HTTPException(status_code=401, detail="Could not validate token")
+        return None
 
-    user = await users_crud.get_user_by_email(email, db)
-    if user is None:
-        raise HTTPException(status_code=401, detail="User not found")
+    user = await users_crud.get_user_by_email(email=email, db=db)
     return user
