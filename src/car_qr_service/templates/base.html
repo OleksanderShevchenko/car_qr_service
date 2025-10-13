@@ -17,8 +17,8 @@
             <div class="flex h-16 items-center justify-between">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                         <a href="/pages">
-                             <img class="h-8 w-8" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
+                         <a href="/">
+                             <img class="h-8 w-8" src="{{ url_for('static', path='images/logo.svg') }}"
                                  alt="Car QR Service">
                          </a>
                     </div>
@@ -27,7 +27,7 @@
                             {# Посилання на головну та кабінет #}
                             <a href="/pages"
                                class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium"
-                               aria-current="page">Головна</a>
+                               aria-current="page">Пошук</a>
                             <a href="/pages/cabinet"
                                class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">Особистий
                                 кабінет</a>
