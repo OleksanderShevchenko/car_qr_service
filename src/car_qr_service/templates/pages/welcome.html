@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Вітаємо у Car QR Service{% endblock %}
+
+{% block content %}
+<!-- Головний контейнер тепер є flex-контейнером -->
+<div class="relative isolate overflow-hidden bg-gray-900 flex">
+    <!-- Фонове зображення та шар затемнення -->
+    <img src="{{ url_for('static', path='images/welcome_bg.jpg') }}" alt="" class="absolute inset-0 -z-10 h-full w-full object-cover">
+    <div class="absolute inset-0 bg-gray-900/60 mix-blend-multiply" aria-hidden="true"></div>
+
+    <!-- ЗМІНА: Контейнер контенту тепер керує вертикальним розташуванням -->
+    <div class="relative mx-auto max-w-7xl px-6 lg:px-8 w-full flex flex-col justify-between py-24 sm:py-32">
+
+        <!-- Верхня група: заголовок та український текст -->
+        <div>
+            <div class="mx-auto max-w-2xl lg:mx-0">
+                <h2 class="text-4xl font-bold tracking-tight text-white sm:text-6xl">Car QR Service</h2>
+                <div class="mt-6 text-lg leading-8 text-gray-300">
+                    <p class="mt-4">
+                        <strong>Ласкаво просимо!</strong> Наш сервіс допомагає водіям та пішоходам швидко знаходити спільну мову. Залишили авто і воно може комусь заважати? Просто розмістіть під склом унікальний QR-код. Людина, яка його просканує, зможе анонімно зв'язатися з вами, не знаючи вашого номеру телефону.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Нижня група: англійський текст та посилання -->
+        <div>
+            <div class="mx-auto max-w-2xl lg:mx-0">
+                <div class="mt-6 text-lg leading-8 text-gray-300">
+                    <p class="mt-4">
+                        <strong>Welcome!</strong> Our service helps drivers and pedestrians find common ground quickly. Have you parked your car where it might be in someone's way? Just place a unique QR code on your dashboard. Anyone who scans it can contact you anonymously without knowing your phone number.
+                    </p>
+                </div>
+            </div>
+            <div class="mx-auto mt-10 max-w-2xl lg:mx-0 lg:max-w-none">
+                <div class="grid grid-cols-1 gap-x-8 gap-y-6 text-base font-semibold leading-7 text-white sm:grid-cols-2 md:flex lg:gap-x-10">
+                    <a href="/pages/register">Зареєструватися <span aria-hidden="true">&rarr;</span></a>
+                    <a href="/pages/login">Увійти <span aria-hidden="true">&rarr;</span></a>
+                    <a href="/pages/">Знайти авто за номером <span aria-hidden="true">&rarr;</span></a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
