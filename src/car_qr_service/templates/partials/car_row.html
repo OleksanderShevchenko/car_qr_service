@@ -1,11 +1,20 @@
 <!-- This template receives a 'car' object -->
-<tr>
+<tr id="car-row-{{ car.id }}">
     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ car.license_plate }}</td>
     <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ car.brand }}</td>
     <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ car.model }}</td>
+    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+        <button type="button" class="text-indigo-600 hover:text-indigo-900">Показати QR</button>
+    </td>
     <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-        <a href="/pages/qr-code/{{ car.license_plate }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
-            Показати QR
-        </a>
+        <button
+            hx-delete="/pages/cabinet/cars/{{ car.id }}"
+            hx-target="closest tr"
+            hx-swap="outerHTML"
+            hx-confirm="Ви впевнені, що хочете видалити авто {{ car.license_plate }}?"
+            class="text-red-600 hover:text-red-900"
+        >
+            Видалити<span class="sr-only">, {{ car.license_plate }}</span>
+        </button>
     </td>
 </tr>

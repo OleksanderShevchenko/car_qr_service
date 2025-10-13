@@ -224,3 +224,28 @@ async def handle_registration(
         key="access_token", value=f"Bearer {access_token}", httponly=True
     )
     return response
+
+
+@router.delete("/cabinet/cars/{car_id}", response_class=HTMLResponse)
+async def delete_car_for_user(
+    car_id: int,
+    current_user: Annotated[User, Depends(get_current_user_from_cookie)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+):
+    """
+    Handles deleting a car for the current user via HTMX.
+    Returns an empty response to remove the row from the table.
+    """
+    if current_user is None:
+        # User is not authenticated
+        return HTMLResponse(status_code=status.HTTP_401_UNAUTHORIZED)
+    # Find the car in the database
+    car_to_delete = await cars_crud.get_car_by_id(db, car_id=car_id)
+    # Check if the car exists and if it belongs to the current user
+    if not car_to_delete or car_to_delete.owner_id != current_user.id:
+        # Do not let the user know if the car exists or not, just forbid the action
+        return HTMLResponse(status_code=status.HTTP_403_FORBIDDEN)
+    # Delete the car
+    await cars_crud.delete_car(db, car=car_to_delete)
+    # Return an empty response, HTMX will replace the table row with it
+    return HTMLResponse(content="", status_code=status.HTTP_200_OK)
