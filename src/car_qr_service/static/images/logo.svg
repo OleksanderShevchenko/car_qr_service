@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <title>Car QR Service Logo</title>
+  <!-- Main square shape in indigo color -->
+  <rect width="100" height="100" rx="20" fill="#4f46e5"/>
+  
+  <!-- Simulating QR code patterns with white squares -->
+  <rect x="20" y="20" width="25" height="25" rx="5" fill="white"/>
+  <rect x="55" y="20" width="25" height="25" rx="5" fill="white"/>
+  <rect x="20" y="55" width="25" height="25" rx="5" fill="white"/>
+  
+  <!-- Smaller squares for detail -->
+  <rect x="55" y="55" width="10" height="10" rx="2" fill="white"/>
+  <rect x="70" y="55" width="10" height="10" rx="2" fill="white"/>
+  <rect x="55" y="70" width="10" height="10" rx="2" fill="white"/>
+  <rect x="70" y="70" width="10" height="10" rx="2" fill="white"/>
+</svg>
