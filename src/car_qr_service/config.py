@@ -32,10 +32,10 @@ class Settings(BaseSettings):
     def SYNC_DB_URL(self) -> str:
         """Синхронний URL для Alembic (використовує psycopg)"""
         return (
-            f"postgresql+psycopg://"  # <--- Ключова зміна
+            f"postgresql+psycopg://"
             f"{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}"
-            f"/{self.POSTGRES_DB}?ssl=require"
+            f"/{self.POSTGRES_DB}?sslmode=require"
         )
 
     class Config:
