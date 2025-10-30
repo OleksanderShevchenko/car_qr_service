@@ -4,8 +4,7 @@ services:
     env: python
     region: frankfurt
     buildCommand: "poetry install"
-    release:
-      command: "poetry run alembic upgrade head"
+    preDeployCommand: "poetry run alembic upgrade head"
     startCommand: "poetry run uvicorn src.car_qr_service.main:app --host 0.0.0.0 --port $PORT"
 
     envVars:
