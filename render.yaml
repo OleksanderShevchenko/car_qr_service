@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: car-qr-service
+    env: python
+    region: frankfurt
+    buildCommand: "poetry install"
+    release:
+      command: "poetry run alembic upgrade head"
+    startCommand: "poetry run uvicorn src.car_qr_service.main:app --host 0.0.0.0 --port $PORT"
+
+    envVars:
+      # --- Автоматична прив'язка до бази ---
+      - fromDatabase:
+          name: car_qr_service_db
+          property: database
+        key: POSTGRES_DB
+      - fromDatabase:
+          name: car_qr_service_db
+          property: user
+        key: POSTGRES_USER
+      - fromDatabase:
+          name: car_qr_service_db
+          property: password
+        key: POSTGRES_PASSWORD
+      - fromDatabase:
+          name: car_qr_service_db
+          property: host
+        key: POSTGRES_SERVER
+      - fromDatabase:
+          name: car_qr_service_db
+          property: port
+        key: POSTGRES_PORT
