@@ -19,11 +19,12 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(254), unique=True, index=True)
     phone_number: Mapped[str] = mapped_column(String(20), unique=True)
     hashed_password: Mapped[str] = mapped_column(String(128))
-    first_name: Mapped[str] = mapped_column(String(128),default="", server_default="")
+    first_name: Mapped[str] = mapped_column(String(128), default="", server_default="")
     last_name: Mapped[str] = mapped_column(String(128), default="", server_default="")
     created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime, default=datetime.datetime.now(datetime.timezone.utc), server_default=func.now()
-    )
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False)
     show_phone_number: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     # Зв'язок "один-до-багатьох": один користувач може мати багато автомобілів.
     # back_populates="owner" вказує на атрибут 'owner' в моделі Car.
