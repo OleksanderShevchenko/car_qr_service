@@ -14,28 +14,33 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
-    # --- АВТОМАТИЧНО СТВОРЕНА ЗМІННА ---
+    # --- 1. АСИНХРОННИЙ URL (для FastAPI) ---
     @computed_field
     @property
     def DB_URL(self) -> str:
-        """
-        Автоматично збирає URL для підключення до бази даних.
-        Використовуємо 'postgresql+asyncpg', оскільки ми
-        використовуємо create_async_engine.
-        """
+        """Асинхронний URL для FastAPI"""
         return (
             f"postgresql+asyncpg://"
             f"{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}"
-            f"/{self.POSTGRES_DB}"
-            f"?ssl=require"
+            f"/{self.POSTGRES_DB}?ssl=require"
+        )
+
+    # --- 2. СИНХРОННИЙ URL (для Alembic) ---
+    @computed_field
+    @property
+    def SYNC_DB_URL(self) -> str:
+        """Синхронний URL для Alembic (використовує psycopg)"""
+        return (
+            f"postgresql+psycopg://"  # <--- Ключова зміна
+            f"{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}"
+            f"/{self.POSTGRES_DB}?ssl=require"
         )
 
     class Config:
-        # Це допоможе вам локально, але не вплине на Render
         env_file = ".env"
         env_file_encoding = "utf-8"
         extra = "ignore"
 
-# Створюємо єдиний екземпляр налаштувань для всього проєкту
 settings = Settings()

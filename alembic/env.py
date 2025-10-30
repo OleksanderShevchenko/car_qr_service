@@ -24,7 +24,7 @@ config = context.config
 
 # Встановлюємо sqlalchemy.url з наших налаштувань
 # Це гарантує, що Alembic і додаток дивляться на одну і ту ж БД
-config.set_main_option('sqlalchemy.url', settings.DB_URL)
+config.set_main_option('sqlalchemy.url', settings.SYNC_DB_URL)
 
 # Інтерпретуємо конфігураційний файл для логування Python.
 if config.config_file_name is not None:
