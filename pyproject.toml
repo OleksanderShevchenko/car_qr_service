@@ -6,7 +6,7 @@ authors = ["Oleksander  Shevchenko <oleksandr.shevchenko@damen.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 fastapi = "^0.116.1"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.43"}
 alembic = "^1.16.5"
