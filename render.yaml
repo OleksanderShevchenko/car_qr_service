@@ -3,6 +3,8 @@ services:
     name: car-qr-service
     env: python
     region: frankfurt
+
     buildCommand: "poetry install"
-    preDeployCommand: "poetry run alembic upgrade head"
-    startCommand: "poetry run uvicorn src.car_qr_service.main:app --host 0.0.0.0 --port $PORT"
+    # '&&' означає: "спочатку запусти alembic,
+    # і ТІЛЬКИ ЯКЩО він успішний, запусти uvicorn"
+    startCommand: "poetry run alembic upgrade head && poetry run uvicorn src.car_qr_service.main:app --host 0.0.0.0 --port $PORT"
