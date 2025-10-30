@@ -28,6 +28,7 @@ class Settings(BaseSettings):
             f"{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}"
             f"/{self.POSTGRES_DB}"
+            f"?ssl=require"
         )
 
     class Config:
