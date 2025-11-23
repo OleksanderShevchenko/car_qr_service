@@ -14,6 +14,13 @@ async def get_user_by_email(email: str, db: AsyncSession) -> User | None:
     return result.scalar_one_or_none()
 
 
+async def get_user_by_id(id: int, db: AsyncSession) -> User | None:
+    """Get user from database by its id."""
+    query = select(User).where(User.id == id)
+    result = await db.execute(query)
+    return result.scalar_one_or_none()
+
+
 async def create_user(body: UserCreate, db: AsyncSession) -> User:
     """Create new user in the database"""
     # Create instance of User lodel class

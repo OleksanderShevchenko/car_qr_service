@@ -161,7 +161,7 @@ async def generate_qr_code(
 
     # Формуємо URL для публічної сторінки
     # В реальному житті тут має бути ваш домен
-    public_url = f"https://car-qr-service.onrender.com/pages/cars/{car.id}"
+    public_url = f"https://car-qr-service.onrender.com/pages/cars/{car.id}/public"
 
     # Генеруємо QR-код
     qr_img = qrcode.make(public_url)
@@ -249,3 +249,24 @@ async def delete_car_for_user(
     await cars_crud.delete_car(db, car=car_to_delete)
     # Return an empty response, HTMX will replace the table row with it
     return HTMLResponse(content="", status_code=status.HTTP_200_OK)
+
+
+@router.get("/cars/{car_id}/public", response_class=HTMLResponse)
+async def get_public_car_page(request: Request, car_id: int, db: AsyncSession = Depends(get_db_session)):
+    # 1. Шукаємо машину в базі
+    car = await cars_crud.get_car_by_id(db, car_id=car_id)
+    if not car:
+        return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+
+    # 2. Шукаємо власника цієї машини
+    owner = await users_crud.get_user_by_id(db, car.owner_id)
+
+    # 3. Віддаємо красиву HTML сторінку
+    return templates.TemplateResponse(
+        "public_car.html",
+        {
+            "request": request,
+            "car": car,
+            "owner": owner
+        }
+    )
