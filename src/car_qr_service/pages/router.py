@@ -161,7 +161,7 @@ async def generate_qr_code(
 
     # Формуємо URL для публічної сторінки
     # В реальному житті тут має бути ваш домен
-    public_url = f"https://car-qr-service.onrender.com/pages/cars/{license_plate}"
+    public_url = f"https://car-qr-service.onrender.com/pages/cars/{car.id}"
 
     # Генеруємо QR-код
     qr_img = qrcode.make(public_url)
