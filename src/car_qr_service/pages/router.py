@@ -259,7 +259,7 @@ async def get_public_car_page(request: Request, car_id: int, db: AsyncSession = 
         return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
 
     # 2. Шукаємо власника цієї машини
-    owner = await users_crud.get_user_by_id(db, car.owner_id)
+    owner = await users_crud.get_user_by_id(car.owner_id, db)
 
     # 3. Віддаємо красиву HTML сторінку
     return templates.TemplateResponse(
