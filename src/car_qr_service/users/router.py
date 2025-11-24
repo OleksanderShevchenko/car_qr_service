@@ -39,6 +39,13 @@ async def create_new_user(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"User with email {body.email} already exists."
         )
+    # check same for phone number
+    existing_user = await crud.get_user_by_phone(body.phone_number, db)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"User with phone {body.phone_number} already exists."
+        )
     # Добре - створюємо нового користувача
     # All right - creat new user
     new_user = await crud.create_user(body, db)
