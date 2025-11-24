@@ -235,7 +235,7 @@ async def handle_registration(
 
         # Повертаємо користувача на ту ж сторінку з помилкою
         return templates.TemplateResponse(
-            "pages/register.html",
+            "/pages/register.html",
             {
                 "request": request,
                 "error": error_msg,
@@ -260,7 +260,7 @@ async def handle_registration(
             error_msg = f"Користувач з телефоном {phone_number} вже існує"
 
         return templates.TemplateResponse(
-            "register.html",
+            "/pages/register.html",
             {
                 "request": request,
                 "error": error_msg,
