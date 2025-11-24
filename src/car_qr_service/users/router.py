@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.car_qr_service.auth.utils import get_current_user
@@ -33,23 +34,34 @@ async def create_new_user(
     """
     # Спочатку перевіряю, чи вже існує користувач із такою ж електронною поштою.
     # First check if a user with same email already exists
-    existing_user = await crud.get_user_by_email(body.email, db)
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"User with email {body.email} already exists."
-        )
-    # check same for phone number
-    existing_user2 = await crud.get_user_by_phone(body.phone_number, db)
-    if existing_user2:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"User with phone {body.phone_number} already exists."
-        )
-    # Добре - створюємо нового користувача
-    # All right - creat new user
-    new_user = await crud.create_user(body, db)
-    return new_user
+    try:
+        new_user = await crud.create_user(body, db)
+        return new_user
+
+    except IntegrityError as e:
+        # Якщо база повернула помилку унікальності (дублікат)
+        await db.rollback()  # Обов'язково відкочуємо сесію
+
+        # Перевіряємо текст помилки, щоб зрозуміти, що саме дублюється
+        # (Postgres зазвичай пише це в e.orig)
+        error_msg = str(e.orig)
+
+        if "users_email_key" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"User with email {body.email} already exists."
+            )
+        elif "users_phone_number_key" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"User with phone {body.phone_number} already exists."
+            )
+        else:
+            # Якась інша помилка бази
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Database integrity error"
+            )
 
 
 @router.get("/me",
