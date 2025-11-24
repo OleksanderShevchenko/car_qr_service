@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -62,6 +63,19 @@ async def create_new_user(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Database integrity error"
             )
+    except ValidationError as err:
+        if "password" in str(err):
+            # Некоректний пароль
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Incorrect password! Details: {err}"
+            )
+        else:
+            #  Якась інша помилка валідації
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Validation error: {err}"
+                )
 
 
 @router.get("/me",
