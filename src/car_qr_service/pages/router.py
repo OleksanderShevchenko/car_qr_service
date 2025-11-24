@@ -235,7 +235,7 @@ async def handle_registration(
 
         # Повертаємо користувача на ту ж сторінку з помилкою
         return templates.TemplateResponse(
-            "register.html",
+            "pages/register.html",
             {
                 "request": request,
                 "error": error_msg,
