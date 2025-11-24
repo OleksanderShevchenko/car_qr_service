@@ -22,7 +22,7 @@ async def get_user_by_id(id: int, db: AsyncSession) -> User | None:
 
 
 async def get_user_by_phone(phone_number: str, db: AsyncSession) -> User | None:
-    """Get user from database by its id."""
+    """Get user from database by its phone_number."""
     query = select(User).where(User.phone_number == phone_number)
     result = await db.execute(query)
     return result.scalar_one_or_none()
@@ -30,7 +30,7 @@ async def get_user_by_phone(phone_number: str, db: AsyncSession) -> User | None:
 
 async def create_user(body: UserCreate, db: AsyncSession) -> User:
     """Create new user in the database"""
-    # Create instance of User lodel class
+    # Create instance of User class
     new_user = User(
         email=body.email,
         phone_number=body.phone_number,
