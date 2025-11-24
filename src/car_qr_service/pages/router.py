@@ -5,8 +5,11 @@ import io
 from fastapi import APIRouter, Request, Depends, Form, Request, Response, status, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import ValidationError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from car_qr_service.cars import crud
 from src.car_qr_service.auth.utils import get_current_user, authenticate_user, create_access_token, \
     get_current_user_from_cookie
 from src.car_qr_service.database.database import get_db_session
@@ -185,6 +188,7 @@ async def get_register_page(request: Request):
 
 @router.post("/register")
 async def handle_registration(
+        request: Request,
         db: Annotated[AsyncSession, Depends(get_db_session)],
         email: str = Form(...),
         phone_number: str = Form(...),
@@ -204,26 +208,69 @@ async def handle_registration(
             url="/pages/register?error=exists", status_code=status.HTTP_302_FOUND
         )
 
-    user_data = UserCreate(
-        email=email,
-        phone_number=phone_number,
-        password=password,
-        first_name=first_name or "",
-        last_name=last_name or "",
-        show_phone_number=show_phone_number,
-    )
+    try:
+        # 2. Створюємо Pydantic-модель ВРУЧНУ всередині функції.
+        # Саме тут спрацює валідація (довжина пароля і т.д.)
+        user_data = UserCreate(
+            email=email,
+            phone_number=phone_number,
+            first_name=first_name,
+            last_name=last_name,
+            password=password,
+            show_phone_number=False
+        )
 
-    user = await users_crud.create_user(user_data, db)
+        # 3. Якщо валідація пройшла успішно, пробуємо записати в базу
+        await users_crud.create_user(user_data, db)
 
-    # Автоматично логінимо нового користувача
-    access_token = create_access_token(data={"sub": user.email})
-    response = RedirectResponse(
-        url="/pages/cabinet", status_code=status.HTTP_302_FOUND
-    )
-    response.set_cookie(
-        key="access_token", value=f"Bearer {access_token}", httponly=True
-    )
-    return response
+        # 4. Успіх! Перенаправляємо на логін
+        return RedirectResponse(url="/pages/login", status_code=status.HTTP_302_FOUND)
+
+    except ValidationError as e:
+        # 5. ЛОВИМО помилку валідації (короткий пароль)
+        # Витягуємо текст першої помилки
+        error_msg = e.errors()[0]['msg']
+        if "short" in error_msg: # Pydantic дає повідомлення типу "String should have at least 8 characters"
+             error_msg = "Пароль має бути не менше 8 символів"
+
+        # Повертаємо користувача на ту ж сторінку з помилкою
+        return templates.TemplateResponse(
+            "register.html",
+            {
+                "request": request,
+                "error": error_msg,
+                # Можна повернути введені дані, щоб користувачу не вводити все заново
+                "email": email,
+                "first_name": first_name,
+                "last_name": last_name,
+                "phone_number": phone_number
+            },
+            status_code=400
+        )
+
+    except IntegrityError as e:
+        # 6. ЛОВИМО помилку дублікатів (база даних)
+        await db.rollback()
+        error_msg = "Помилка реєстрації"
+        orig_error = str(e.orig)
+
+        if "users_email_key" in orig_error:
+            error_msg = f"Користувач з email {email} вже існує"
+        elif "users_phone_number_key" in orig_error:
+            error_msg = f"Користувач з телефоном {phone_number} вже існує"
+
+        return templates.TemplateResponse(
+            "register.html",
+            {
+                "request": request,
+                "error": error_msg,
+                "email": email,
+                "first_name": first_name,
+                "last_name": last_name,
+                "phone_number": phone_number
+            },
+            status_code=409
+        )
 
 
 @router.delete("/cabinet/cars/{car_id}", response_class=HTMLResponse)
