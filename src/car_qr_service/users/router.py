@@ -72,10 +72,10 @@ async def create_new_user(
             )
         else:
             #  Якась інша помилка валідації
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Validation error: {err}"
-                )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Validation error: {err}"
+            )
 
 
 @router.get("/me",
