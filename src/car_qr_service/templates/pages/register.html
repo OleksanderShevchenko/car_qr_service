@@ -24,7 +24,7 @@
             <div>
                 <label for="email" class="block text-sm font-medium leading-6 text-gray-900">Електронна пошта</label>
                 <div class="mt-2">
-                    <input id="email" name="email" type="email" autocomplete="email" required
+                    <input id="email" name="email" type="email" autocomplete="email" value="{{ email }}" required
                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
                 </div>
             </div>
@@ -32,7 +32,7 @@
             <div>
                 <label for="phone_number" class="block text-sm font-medium leading-6 text-gray-900">Номер телефону</label>
                 <div class="mt-2">
-                    <input id="phone_number" name="phone_number" type="tel" autocomplete="tel" required
+                    <input id="phone_number" name="phone_number" type="tel" autocomplete="tel" value="{{ phone_number }}" required
                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
                 </div>
             </div>
@@ -50,7 +50,7 @@
             <div>
                 <label for="first_name" class="block text-sm font-medium leading-6 text-gray-900">Ім'я (опціонально)</label>
                 <div class="mt-2">
-                    <input id="first_name" name="first_name" type="text" autocomplete="given-name"
+                    <input id="first_name" name="first_name" type="text" autocomplete="given-name" value="{{ first_name }}"
                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
                 </div>
             </div>
@@ -58,7 +58,7 @@
             <div>
                 <label for="last_name" class="block text-sm font-medium leading-6 text-gray-900">Прізвище (опціонально)</label>
                 <div class="mt-2">
-                    <input id="last_name" name="last_name" type="text" autocomplete="family-name"
+                    <input id="last_name" name="last_name" type="text" autocomplete="family-name" value="{{ last_name }}"
                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
                 </div>
             </div>

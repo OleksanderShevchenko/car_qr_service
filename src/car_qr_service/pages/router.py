@@ -230,8 +230,8 @@ async def handle_registration(
         # 5. ЛОВИМО помилку валідації (короткий пароль)
         # Витягуємо текст першої помилки
         error_msg = e.errors()[0]['msg']
-        if "short" in error_msg: # Pydantic дає повідомлення типу "String should have at least 8 characters"
-             error_msg = "Пароль має бути не менше 8 символів"
+        if "password" in str(e): # Pydantic дає повідомлення типу "String should have at least 8 characters"
+             error_msg = "Пароль має бути не менше 8 символів (Password shall have 8+ characters)!"
 
         # Повертаємо користувача на ту ж сторінку з помилкою
         return templates.TemplateResponse(
@@ -257,7 +257,7 @@ async def handle_registration(
         if "users_email_key" in orig_error:
             error_msg = f"Користувач з email {email} вже існує"
         elif "users_phone_number_key" in orig_error:
-            error_msg = f"Користувач з телефоном {phone_number} вже існує"
+            error_msg = f"Користувач з телефоном {phone_number} вже існує (User with phone number {phone_number} already exists!"
 
         return templates.TemplateResponse(
             "/pages/register.html",
