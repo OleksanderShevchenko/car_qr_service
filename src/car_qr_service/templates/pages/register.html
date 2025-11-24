@@ -12,6 +12,12 @@
         </h2>
     </div>
 
+    {% if error %}
+    <div class="alert alert-danger" role="alert" style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 10px;">
+        ⚠️ {{ error }}
+    </div>
+    {% endif %}
+
     <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
         {# The form sends data to our new POST /pages/register endpoint #}
         <form class="space-y-6" action="/pages/register" method="post">
